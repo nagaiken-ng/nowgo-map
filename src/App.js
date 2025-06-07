@@ -1,4 +1,23 @@
 import { useEffect, useRef, useState } from "react";
+const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+
+const loadGoogleMapsScript = () => {
+  return new Promise((resolve, reject) => {
+    if (window.google) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    script.onload = resolve;
+    script.onerror = reject;
+
+    document.head.appendChild(script);
+  });
+};
 
 function App() {
   const mapRef = useRef(null);
@@ -39,10 +58,17 @@ function App() {
   };
 
   useEffect(() => {
-    if (window.google && mapRef.current) {
-      getAndSetCurrentLocation();
-    }
-  }, []);
+  loadGoogleMapsScript()
+    .then(() => {
+      if (mapRef.current) {
+        getAndSetCurrentLocation();
+      }
+    })
+    .catch((error) => {
+      console.error("Google Maps の読み込みに失敗しました:", error);
+    });
+}, []);
+
 
   useEffect(() => {
     if (map) {
